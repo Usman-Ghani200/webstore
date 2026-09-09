@@ -61,7 +61,10 @@ export const AdminDashboardPage: React.FC = () => {
     stock: 20,
     featured: false,
     isNewArrival: true,
-    image1: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=600&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=600&q=80'
+    ],
+    newImageUrl: '',
     variantName: '',
     variantPriceAdj: 0
   });
@@ -114,7 +117,10 @@ export const AdminDashboardPage: React.FC = () => {
       stock: 20,
       featured: false,
       isNewArrival: true,
-      image1: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=600&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=600&q=80'
+      ],
+      newImageUrl: '',
       variantName: 'Default',
       variantPriceAdj: 0
     });
@@ -133,16 +139,56 @@ export const AdminDashboardPage: React.FC = () => {
       stock: product.stock,
       featured: product.featured,
       isNewArrival: product.isNewArrival,
-      image1: product.images[0] || '',
+      images: product.images.length > 0 ? [...product.images] : ['https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=600&q=80'],
+      newImageUrl: '',
       variantName: product.variants[0]?.name || '',
       variantPriceAdj: product.variants[0]?.priceAdjustment || 0
     });
     setIsProductModalOpen(true);
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          const resultStr = reader.result;
+          setProdForm((prev) => ({
+            ...prev,
+            images: [...prev.images, resultStr]
+          }));
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleAddImageUrl = () => {
+    if (!prodForm.newImageUrl.trim()) return;
+    setProdForm((prev) => ({
+      ...prev,
+      images: [...prev.images, prev.newImageUrl.trim()],
+      newImageUrl: ''
+    }));
+  };
+
+  const handleRemoveImage = (indexToRemove: number) => {
+    setProdForm((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, idx) => idx !== indexToRemove)
+    }));
+  };
+
   const handleSaveProduct = (e: React.FormEvent) => {
     e.preventDefault();
     const saleVal = prodForm.salePrice ? Number(prodForm.salePrice) : undefined;
+    const finalImages = prodForm.images.filter((img) => img.trim() !== '');
+    if (finalImages.length === 0) {
+      finalImages.push('https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=600&q=80');
+    }
 
     const variants = prodForm.variantName
       ? [
@@ -167,7 +213,7 @@ export const AdminDashboardPage: React.FC = () => {
         stock: Number(prodForm.stock),
         featured: prodForm.featured,
         isNewArrival: prodForm.isNewArrival,
-        images: [prodForm.image1],
+        images: finalImages,
         variants
       });
     } else {
@@ -182,7 +228,7 @@ export const AdminDashboardPage: React.FC = () => {
         stock: Number(prodForm.stock),
         featured: prodForm.featured,
         isNewArrival: prodForm.isNewArrival,
-        images: [prodForm.image1],
+        images: finalImages,
         variants
       });
     }
@@ -989,15 +1035,60 @@ export const AdminDashboardPage: React.FC = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Image URL</label>
-                <input
-                  type="text"
-                  required
-                  value={prodForm.image1}
-                  onChange={(e) => setProdForm({ ...prodForm, image1: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5"
-                />
+              <div className="space-y-3 bg-slate-50 border border-slate-200 p-3.5 rounded-2xl">
+                <label className="block font-bold text-slate-800">Product Pictures</label>
+
+                {/* Image Thumbnails List */}
+                {prodForm.images.length > 0 && (
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                    {prodForm.images.map((imgUrl, idx) => (
+                      <div key={idx} className="relative group rounded-lg overflow-hidden border border-slate-300 bg-white aspect-square">
+                        <img src={imgUrl} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(idx)}
+                          className="absolute top-1 right-1 bg-rose-600 text-white p-1 rounded-full opacity-90 hover:opacity-100 transition shadow-xs"
+                          title="Remove picture"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Local File Upload Option */}
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Upload Picture File from Device</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileUpload}
+                    className="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200 transition"
+                  />
+                </div>
+
+                {/* Image URL Input Option */}
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Or Add Picture via Web URL</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="https://..."
+                      value={prodForm.newImageUrl}
+                      onChange={(e) => setProdForm({ ...prodForm, newImageUrl: e.target.value })}
+                      className="flex-1 bg-white border border-slate-300 rounded-xl p-2 text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddImageUrl}
+                      className="bg-slate-800 hover:bg-slate-900 text-white font-bold px-3 py-2 rounded-xl text-xs"
+                    >
+                      Add URL
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div>

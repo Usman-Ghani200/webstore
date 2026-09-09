@@ -4,7 +4,6 @@ import {
   ShoppingBag,
   Search,
   User,
-  ShieldCheck,
   Menu,
   X,
   Truck,
@@ -16,7 +15,7 @@ import {
 import { useStore } from '../context/StoreContext';
 
 export const Header: React.FC = () => {
-  const { cart, categories, isAdminLoggedIn } = useStore();
+  const { cart, categories } = useStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -101,19 +100,6 @@ export const Header: React.FC = () => {
             >
               <User className="w-5 h-5" />
               <span className="hidden sm:inline">Account</span>
-            </Link>
-
-            <Link
-              to="/admin"
-              className={`flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border transition ${
-                isAdminLoggedIn
-                  ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
-                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-emerald-500 hover:text-emerald-700'
-              }`}
-              title="Store Admin Panel"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
-              <span>Admin</span>
             </Link>
 
             {/* Cart Icon */}
